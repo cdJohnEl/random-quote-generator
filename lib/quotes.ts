@@ -1,13 +1,22 @@
-// Define the Quote type
-export type Quote = {
+/**
+ * Quote interface representing a single quote with its metadata
+ */
+export interface Quote {
+  /** Unique identifier for the quote */
   id: string;
+  /** The quote text */
   text: string;
+  /** The person who said or wrote the quote */
   author: string;
+  /** Optional categories or themes for the quote */
   tags?: string[];
-};
+}
 
-// Sample quotes data
-const quotes: Quote[] = [
+/**
+ * Collection of quotes data
+ * Separated into its own constant for better organization and potential future extraction to a JSON file
+ */
+const QUOTES_DATA: Quote[] = [
   {
     id: "1",
     text: "The greatest glory in living lies not in never falling, but in rising every time we fall.",
@@ -70,24 +79,45 @@ const quotes: Quote[] = [
   }
 ];
 
+// Create a Map for O(1) lookups by ID
+const quotesById = new Map<string, Quote>(
+  QUOTES_DATA.map(quote => [quote.id, quote])
+);
+
+// Create a Map for faster lookups by tag
+const quotesByTag = new Map<string, Quote[]>();
+QUOTES_DATA.forEach(quote => {
+  quote.tags?.forEach(tag => {
+    if (!quotesByTag.has(tag)) {
+      quotesByTag.set(tag, []);
+    }
+    quotesByTag.get(tag)?.push(quote);
+  });
+});
+
 /**
  * Get a random quote from the collection
+ * @returns A random quote object
  */
 export function getRandomQuote(): Quote {
-  const randomIndex = Math.floor(Math.random() * quotes.length);
-  return quotes[randomIndex];
+  const randomIndex = Math.floor(Math.random() * QUOTES_DATA.length);
+  return QUOTES_DATA[randomIndex];
 }
 
 /**
- * Get a quote by its ID
+ * Get a quote by its ID with O(1) lookup time
+ * @param id The unique identifier of the quote
+ * @returns The quote object if found, undefined otherwise
  */
 export function getQuoteById(id: string): Quote | undefined {
-  return quotes.find(quote => quote.id === id);
+  return quotesById.get(id);
 }
 
 /**
- * Get quotes by tag
+ * Get all quotes with a specific tag with O(1) lookup time
+ * @param tag The tag to search for
+ * @returns An array of quotes with the specified tag
  */
 export function getQuotesByTag(tag: string): Quote[] {
-  return quotes.filter(quote => quote.tags?.includes(tag));
+  return quotesByTag.get(tag) || [];
 }
